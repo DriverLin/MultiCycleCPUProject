@@ -1,0 +1,43 @@
+OP = 高5位
+从状态1判断跳转
+
+I类 
+A = Reg[Ins[25:21]]
+B = Ins[15:0] 扩展32位
+ALUOP = Ins[31:26]
+reg[Instr[20:16]] <= ALUResult
+
+Jump
+PC <= {DataPCReg[31:28], Instr[25:0]*4}
+
+JR 寄存器跳转
+PC <= Reg[Instr[25:21]]
+
+比较跳转
+A = Reg[Instr[25:21]]
+B = Reg[Instr[20:16]]
+比较结果控制是否跳转
+跳转则
+AlusrcA = reg[Instr[25:21]]
+AlusrcB = {16'bIns[15],Ins[15:0]}一个立即数？
+ALUOp = ALUOP_ADD
+PC <= ALUOp 
+
+
+R类
+ALUOP_SLL,ALUOP_SRL,ALUOP_SRA
+则ALUSrcA = {27'b0,Ins[10:6]}
+其他情况下AlusrcA = reg[Instr[25:21]]
+AlusrcB = reg[Instr[20:16]]
+ALUOP = Ins[5:0]
+reg[Instr[15:11]] <= ALUResult
+
+SW
+regIndex = Instr[20:16]
+memAddr = Instr[11:2] 10位 1024范围寻址
+DataMem[memAddr] <= reg[regIndex]
+
+LW
+regIndex = Instr[20:16]
+memAddr = Instr[11:2] 10位 1024范围寻址
+reg[regIndex] <= DataMem[memAddr]

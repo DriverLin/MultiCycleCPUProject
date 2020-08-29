@@ -31,6 +31,7 @@
 `define OP_BGEZ 6'b000001
 `define OP_J    6'b000010
 `define OP_JAL  6'b000011
+`define OP_HALT 6'b111111//额外加入
 //////////////////////////////////////////////////////////////////////////////////
 // 模块名称: CU
 // 模块功能:主要控制单元
@@ -107,8 +108,11 @@ module CU(
                 // 分支
                 `OP_BEQ, `OP_BNE, `OP_BLEZ, `OP_BGTZ, `OP_BLTZ, `OP_BGEZ:
                     State = 8;
-                `OP_J, `OP_JAL:
+                `OP_J, `OP_JAL:// JAL 跳转并链接
                     State = 9;
+                //停机
+                `OP_HALT:
+                    $finish;
                 default:    
                     State = 0;
             endcase
@@ -129,8 +133,8 @@ module CU(
                     State = 0;
             endcase
         end
-        // State 3: lw
-        // 执行操作: None
+        // State 3: mem->reg
+        //执行操作:设置OP
         3: begin
             {PCWriteCond,PCWrite,PCSource} = 4'b0000;// 非分支 PC不可直写 
             MemWrite = 0;
@@ -166,7 +170,7 @@ module CU(
         //           if funct (即Ins[5:0]) == ALUOP_SLL,ALUOP_SRL,ALUOP_SRA
         //              ALU_A = {27'b0,Ins[10:6]}
         //           else
-        //               Alu_A = reg[Instr[25:21]]
+        //              Alu_A = reg[Instr[25:21]]
         //          Alu_B = reg[Instr[20:16]]
         //          ALUOP = Ins[5:0]
         6:  begin
@@ -191,7 +195,7 @@ module CU(
             State = 0;
         end
         // State 8: 分支指令执行
-        // 执行操作: Alu_A = reg[Instr[25:21]]
+        // 执行操作: Alu_A = PCreg
         //          Alu_B = {16'bIns[15],Ins[15:0]}
         //          ALUOp = ALUOP_ADD
         //          独立的分支计算模块会计算比较结果,SignalBranch控制是否跳转
@@ -199,10 +203,10 @@ module CU(
         //          则此时则 PCWriteCond==1 && SignalBranch==1  
         //              PC <= AluResult
         8: begin
-            {PCWriteCond,PCWrite,PCSource} = 4'b1000;// 分支 PC不可直写  分支结束则 pc <= 4路选择器选择Data1:DataALUOut
+            {PCWriteCond,PCWrite,PCSource} = 4'b1000;// 分支 PC不可直写  分支结束则 pc <= PC_MUX:Data1:DataALUOut
             MemWrite = 0;
             {Mem2Reg,RegDst,IRWrite,RegWrite} = 6'b000000;// mem2reg:Data1:寄存器编号来自ALU的计算结果 RegDst:Data1 寄存器编号来自Instr[20:16] 指令寄存器保持 寄存器堆不可写
-            {ALU_A,ALU_B,ALUCtrlOp} = {4'b0011,`ALUCTRL_ADD};//ALU_A:A_Data1:RegFileOUT_1  ALU_B:Data4:EXT_imm32*4
+            {ALU_A,ALU_B,ALUCtrlOp} = {4'b0011,`ALUCTRL_ADD};//ALU_A:A_Data1:PCreg  ALU_B:Data4:EXT_imm32*4
             State = 0;
         end
         // State 9: Jump / JR
@@ -218,7 +222,7 @@ module CU(
             MemWrite = 0;
             if(OP == `OP_J || funct == `JROP_JR)
                 {Mem2Reg,RegDst,IRWrite,RegWrite} = 6'b101000;// mem2reg:Data3:寄存器编号当前PC值 RegDst:Data3 寄存器编号来自= 5'b11111 指令寄存器保持 寄存器堆不可写
-            else
+            else//JAL 跳转并链接 跳转同时把下一条指令放入$ra中 (子程序
                 {Mem2Reg,RegDst,IRWrite,RegWrite}= 6'b101001;// mem2reg:Data3:寄存器编号当前PC值 RegDst:Data3 寄存器编号来自= 5'b11111 指令寄存器保持 寄存器堆可写
             {ALU_A,ALU_B,ALUCtrlOp} = {4'b0011,`ALUCTRL_ADD};//ALU_A:A_Data1:PCreg  ALU_B:Data4:EXT_imm32*4
             State = 0;

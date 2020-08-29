@@ -14,7 +14,7 @@ module CPU(
     wire    [31:0]  DataIMRegOutput;
     wire    [31:0]  DataDMRead;
     wire    [31:0]  DataDMReadReg;
-    wire    [11:0]   DataDMFakeAddr;
+    wire    [11:0]  DataDMFakeAddr;
     wire    [31:0]  DataRFRead1;
     wire    [31:0]  DataRFRead2;
     wire    [4:0]   DataRFWriteAddr;
@@ -44,13 +44,7 @@ module CPU(
     integer cycleNumber;
     assign SignalBranchResult   =   SignalBranch & SignalPCWriteCond;
     assign SignalPCWriteResult  =   SignalBranchResult | SignalPCWrite;
-    // if 可直接写PC:
-    //     PC更新
-    // else if 分支成功&&分支目标已经送PCin:  
-    //     PC更新
-    // else 
-    //     PC保持 
-    // PC
+
     SReg PCSReg(
         .clk(clk),
         .RegWrite(SignalPCWriteResult),
@@ -135,7 +129,7 @@ module CPU(
     Mux RFWriteAddr(
         .Select(SignalRegDst),
         .Data1(Instr[20:16]),//RT
-        .Data2(Instr[15:11]),//RD
+        .Data2(Instr[15:11]),//`
         .Data3(31),
         .Result(DataRFWriteAddr)
     );

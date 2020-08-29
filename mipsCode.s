@@ -1,47 +1,15 @@
-ORI R2 R0 4660
-LUI R3 39030     
-ADDI R4 R2 13398 
-ADDIU R5 R3 64512
-XORI R6 R2 43981 
-SLTIU R5 R4 52   
-SLTIU R5 R2 65535
-ANDI R7 R6 30292 
-SLTI R8 R3 4660  
-ADDI R29 R0 64   
-SW R0 R29 0      
-LBU R0 R8 R4     
-BNE R9 R8 1      
-ADDIU R2 R2 1    
-BGTZ R8 1        
-ADDIU R2 R2 1    
-BLEZ R8 1        
-ADDIU R2 R2 1    
-BGEZ R9 1
-ADDIU R2 R2 1
-BGEZ R8 1
-ADDIU R2 R2 1
-BEQ R10 R9 1
-ADDIU R2 R2 1
-SW R2 R29 0
-ADDI R29 R0 64
-LW R2 R29 0
-J 3101
-LH R2 R8 R4
-ADDIU R2 R2 1
-JAL 3105
-LH R5 R2 R10
-J 3104
-ADDI R29 R0 0
-SW R31 R29 40
-ORI R2 R2 21760
-ADDI R9 R0 12460
-ADDIU R9 R0 R62
-ADDI R29 R0 64
-SW R2 R29 0
-ADDI R29 R0 0
-LW R31 R29 40
-ADDI R31 R0 R0
-ADDI R29 R0 0
-SW R31 R29 44
-ORI R2 R2 80
-ADDI R31 R0 R0
+main:
+    li $a2, 20
+    li $a1, 1    
+    li $a3, 1
+    li $a0, 1
+fib:
+    add   $s2, $a1, $a3
+    addi  $a2, $a2, -1
+    add   $a1, $0,  $s2
+    beq   $a2, $a0, exit
+    add   $s2, $a1, $a3
+    add   $a3, $0   $s2
+    addi  $a2, $a2, -1
+    bne   $a2, $a0, fib
+exit:   add   $s2, $0,  $s2
